@@ -30,6 +30,10 @@ def test_yuc_weekly_record_to_source_record_maps_parser_fields():
         season="2026-04",
         title_text="动漫名称 / Anime Name",
         title_cn="动漫名称",
+        types=["TV", "原创"],
+        tags=["原创", "科幻"],
+        staff=["导演: 监督A"],
+        cast=["配音: 声优A, 声优B"],
         official_url="/official",
         broadcast_text="每周三播出",
         source_url="https://yuc.wiki/202604/",
@@ -46,6 +50,10 @@ def test_yuc_weekly_record_to_source_record_maps_parser_fields():
     assert source_record.weekday_raw == "周三"
     assert source_record.air_time_raw == "24:30"
     assert source_record.start_date_raw == "4/1~"
+    assert source_record.types_raw == ["TV", "原创"]
+    assert source_record.tags_raw == ["原创", "科幻"]
+    assert source_record.staff_raw == ["导演: 监督A"]
+    assert source_record.cast_raw == ["配音: 声优A, 声优B"]
     assert source_record.cover_url_raw == "https://img.example.test/cover.jpg"
     assert source_record.official_url_raw == "https://yuc.wiki/official"
     assert source_record.platform_links_raw[0].url == "https://yuc.wiki/watch/1"

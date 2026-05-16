@@ -165,6 +165,10 @@ class TestYucServiceGetWeeklySchedule:
         assert item["air_time"] == "22:00"
         assert item["start_date"] == "2026-04-01"
         assert item["official_url"] == "https://example.com/anime1"
+        assert item["types"] == ["TV", "原创"]
+        assert item["tags"] == ["原创", "科幻"]
+        assert item["staff"] == ["导演: 监督A", "脚本: 脚本A"]
+        assert item["cast"] == ["配音: 声优A, 声优B"]
 
 
 class TestYucServiceSearch:

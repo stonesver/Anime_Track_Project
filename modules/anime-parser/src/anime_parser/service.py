@@ -134,6 +134,10 @@ def normalize_anime(record: SourceAnimeRecord) -> AnimeParseResult:
 
     # Clean description
     description = clean_display_text(record.description_raw)
+    types = _clean_text_list(record.types_raw)
+    tags = _clean_text_list(record.tags_raw)
+    staff = _clean_text_list(record.staff_raw)
+    cast = _clean_text_list(record.cast_raw)
 
     # Build AnimeItem
     item = AnimeItem(
@@ -149,6 +153,10 @@ def normalize_anime(record: SourceAnimeRecord) -> AnimeParseResult:
         air_time=air_time,
         start_date=start_date,
         description=description,
+        types=types,
+        tags=tags,
+        staff=staff,
+        cast=cast,
         cover_url=cover_url,
         official_url=official_url,
         platform_links=platform_links,
@@ -254,3 +262,16 @@ def normalize_weekly_schedule(
             data=schedule,
             diagnostics=diagnostics,
         )
+
+
+def _clean_text_list(values: List[str]) -> List[str]:
+    """Clean and deduplicate display text lists while preserving order."""
+    cleaned_values = []
+    seen = set()
+    for value in values:
+        cleaned = clean_display_text(value)
+        if not cleaned or cleaned in seen:
+            continue
+        seen.add(cleaned)
+        cleaned_values.append(cleaned)
+    return cleaned_values
