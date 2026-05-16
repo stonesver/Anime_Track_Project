@@ -47,6 +47,10 @@ SAMPLE_RECORD: dict[str, Any] = {
     "air_time_raw": "24:30",
     "start_date_raw": "2026年4月5日",
     "description_raw": "  用于验证归一化链路的示例记录。 ",
+    "types_raw": ["TV", "原创"],
+    "tags_raw": ["校园", "恋爱"],
+    "staff_raw": ["导演: 示例监督"],
+    "cast_raw": ["配音: 示例声优"],
     "cover_url_raw": "//example.test/cover.jpg",
     "official_url_raw": "https://example.test",
     "platform_links_raw": [

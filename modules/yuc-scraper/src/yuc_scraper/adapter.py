@@ -45,6 +45,10 @@ def yuc_weekly_record_to_source_record(
         air_time_raw=record.air_time,
         start_date_raw=record.start_date,
         description_raw=_description_from(record, detail),
+        types_raw=detail.types if detail else [],
+        tags_raw=detail.tags if detail else [],
+        staff_raw=detail.staff if detail else [],
+        cast_raw=detail.cast if detail else [],
         cover_url_raw=_absolute_url(record.cover_url, record.source_url),
         official_url_raw=_absolute_url(detail.official_url, record.source_url) if detail else None,
         platform_links_raw=[
@@ -60,6 +64,10 @@ def yuc_weekly_record_to_source_record(
             "weekly_selector_hits": record.selector_hits,
             "detail_selector_hits": detail.selector_hits if detail else {},
             "weekday_label": record.weekday_label,
+            "detail_types": detail.types if detail else [],
+            "detail_tags": detail.tags if detail else [],
+            "detail_staff": detail.staff if detail else [],
+            "detail_cast": detail.cast if detail else [],
         },
     )
 

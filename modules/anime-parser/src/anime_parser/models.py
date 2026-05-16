@@ -39,6 +39,10 @@ class SourceAnimeRecord(BaseModel):
     air_time_raw: Optional[str] = None
     start_date_raw: Optional[str] = None
     description_raw: Optional[str] = None
+    types_raw: List[str] = Field(default_factory=list)
+    tags_raw: List[str] = Field(default_factory=list)
+    staff_raw: List[str] = Field(default_factory=list)
+    cast_raw: List[str] = Field(default_factory=list)
     cover_url_raw: Optional[str] = None
     official_url_raw: Optional[str] = None
     platform_links_raw: List[SourcePlatformLink] = Field(default_factory=list)
@@ -61,6 +65,10 @@ class AnimeItem(BaseModel):
     start_date: Optional[str] = None
     timezone: str = "Asia/Shanghai"
     description: Optional[str] = None
+    types: List[str] = Field(default_factory=list)
+    tags: List[str] = Field(default_factory=list)
+    staff: List[str] = Field(default_factory=list)
+    cast: List[str] = Field(default_factory=list)
     cover_url: Optional[str] = None
     official_url: Optional[str] = None
     platform_links: List[PlatformLink] = Field(default_factory=list)

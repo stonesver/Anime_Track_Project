@@ -150,6 +150,10 @@ def _merge_anime_items(item1: AnimeItem, item2: AnimeItem) -> Tuple[AnimeItem, L
         ("title_en", lambda a, b: _prefer_longer(a, b)),
         ("aliases", lambda a, b: list(set((a or []) + (b or [])))),
         ("description", lambda a, b: _prefer_longer(a, b)),
+        ("types", lambda a, b: _merge_lists(a, b)),
+        ("tags", lambda a, b: _merge_lists(a, b)),
+        ("staff", lambda a, b: _merge_lists(a, b)),
+        ("cast", lambda a, b: _merge_lists(a, b)),
         ("cover_url", lambda a, b: a or b),
         ("official_url", lambda a, b: a or b),
         ("platform_links", lambda a, b: a or b),
@@ -178,6 +182,15 @@ def _prefer_longer(a: Optional[str], b: Optional[str]) -> Optional[str]:
     if not b:
         return a
     return a if len(a) >= len(b) else b
+
+
+def _merge_lists(a: Optional[List], b: Optional[List]) -> List:
+    """Merge list values while preserving first-seen order."""
+    result = []
+    for value in (a or []) + (b or []):
+        if value not in result:
+            result.append(value)
+    return result
 
 
 def _get_primary_title(record: SourceAnimeRecord) -> str:

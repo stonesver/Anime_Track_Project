@@ -114,6 +114,8 @@ function renderAnimeItem(item) {
     <article class="anime-item">
       <p class="anime-title">${escapeHtml(itemTitle(item))}</p>
       <div class="anime-meta">
+        ${(item.types || []).map((type) => `<span>${escapeHtml(type)}</span>`).join("")}
+        ${(item.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
         ${item.air_time ? `<span>${escapeHtml(item.air_time)}</span>` : ""}
         ${item.start_date ? `<span>${escapeHtml(item.start_date)}</span>` : ""}
         ${item.confidence ? `<span>confidence ${escapeHtml(item.confidence)}</span>` : ""}
@@ -232,6 +234,10 @@ function renderObjectResult(result) {
         <dt>星期</dt><dd>${escapeHtml(data.weekday || "")}</dd>
         <dt>开播时间</dt><dd>${escapeHtml(data.air_time || "")}</dd>
         <dt>开始日期</dt><dd>${escapeHtml(data.start_date || "")}</dd>
+        <dt>类型</dt><dd>${escapeHtml((data.types || []).join("、"))}</dd>
+        <dt>标签</dt><dd>${escapeHtml((data.tags || []).join("、"))}</dd>
+        <dt>制作</dt><dd>${escapeHtml((data.staff || []).join("、"))}</dd>
+        <dt>声优</dt><dd>${escapeHtml((data.cast || []).join("、"))}</dd>
         <dt>别名</dt><dd>${escapeHtml((data.aliases || []).join("、"))}</dd>
         <dt>描述</dt><dd>${escapeHtml(data.description || "")}</dd>
       </dl>

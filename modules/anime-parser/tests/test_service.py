@@ -24,6 +24,10 @@ class TestNormalizeAnime:
             air_time_raw="24:30~",
             start_date_raw="4/1~",
             description_raw="简介",
+            types_raw=["TV", "原创", "TV"],
+            tags_raw=["校园", "恋爱"],
+            staff_raw=["导演: 监督A"],
+            cast_raw=["配音: 声优A"],
             cover_url_raw="https://example.com/cover.jpg",
         )
         result = normalize_anime(record)
@@ -34,6 +38,10 @@ class TestNormalizeAnime:
         assert result.data.weekday == 3
         assert result.data.air_time == "24:30"
         assert result.data.start_date == "2026-04-01"
+        assert result.data.types == ["TV", "原创"]
+        assert result.data.tags == ["校园", "恋爱"]
+        assert result.data.staff == ["导演: 监督A"]
+        assert result.data.cast == ["配音: 声优A"]
 
     def test_missing_title(self):
         record = SourceAnimeRecord(
