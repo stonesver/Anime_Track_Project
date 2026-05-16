@@ -3,6 +3,9 @@
 from functools import cmp_to_key
 from typing import Any, List, Optional, Union
 
+from anime_parser.service import normalize_weekly_schedule
+
+from yuc_scraper.adapter import yuc_records_to_source_records
 from yuc_scraper.client import YucHttpClient
 from yuc_scraper.config import DEFAULT_CONFIG, make_season_compact, YucScrapeConfig
 from yuc_scraper.errors import (
@@ -280,13 +283,22 @@ class YucService:
 
 
 def _build_weekly_schedule_data(parse_result: YucSeasonPageParse, weekday: Optional[int] = None) -> dict:
-    """Build weekly schedule data structure from parsed records."""
-    # Group records by weekday
+    """Build weekly schedule data structure through anime-parser normalization."""
+    source_records = yuc_records_to_source_records(
+        parse_result.weekly_records,
+        parse_result.detail_records,
+    )
+    normalized = normalize_weekly_schedule("yuc", parse_result.season, source_records)
+    if not normalized.ok or not normalized.data:
+        return {"source": "yuc", "season": parse_result.season, "days": []}
+
+    schedule = normalized.data.model_dump(mode="json")
     days_map = {i: [] for i in range(1, 8)}
 
-    for record in parse_result.weekly_records:
-        if record.weekday and 1 <= record.weekday <= 7:
-            days_map[record.weekday].append(_record_to_item(record))
+    for day in schedule.get("days", []):
+        day_weekday = day.get("weekday")
+        if day_weekday and 1 <= day_weekday <= 7:
+            days_map[day_weekday].extend(day.get("items", []))
 
     # Filter by weekday if specified
     if weekday is not None and 1 <= weekday <= 7:
@@ -299,34 +311,10 @@ def _build_weekly_schedule_data(parse_result: YucSeasonPageParse, weekday: Optio
         ]
 
     return {
-        "source": "yuc",
-        "season": parse_result.season,
+        "source": schedule.get("source", "yuc"),
+        "season": schedule.get("season", parse_result.season),
         "days": filtered_days,
     }
-
-
-def _record_to_item(record) -> dict:
-    """Convert YucWeeklySourceRecord to dict item."""
-    item = {
-        "source": "yuc",
-        "external_id": None,
-        "external_url": record.source_url,
-        "season": record.season,
-        "title_cn": record.title_cn,
-        "title_jp": None,
-        "title_en": None,
-        "aliases": [],
-        "weekday": record.weekday,
-        "air_time": record.air_time,
-        "start_date": record.start_date,
-        "timezone": "Asia/Shanghai",
-        "description": record.note,
-        "cover_url": record.cover_url,
-        "official_url": None,
-        "platform_links": [link.model_dump() if hasattr(link, "model_dump") else link for link in record.platform_links],
-        "confidence": 1.0,
-    }
-    return item
 
 
 def _weekday_label(weekday: int) -> str:
