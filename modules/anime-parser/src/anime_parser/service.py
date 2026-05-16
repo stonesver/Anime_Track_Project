@@ -1,6 +1,6 @@
 """Service layer for anime parsing and scheduling."""
 
-from typing import Any
+from typing import Any, Dict, List
 
 from anime_parser.errors import (
     invalid_source_record_diag,
@@ -38,7 +38,7 @@ WEEKDAY_LABELS = {
 }
 
 
-def normalize_anime(record: SourceAnimeRecord) -> AnimeParseResult[AnimeItem]:
+def normalize_anime(record: SourceAnimeRecord) -> AnimeParseResult:
     """Normalize a single source anime record to AnimeItem."""
     diagnostics = []
     operation = "normalize_anime"
@@ -167,8 +167,8 @@ def normalize_anime(record: SourceAnimeRecord) -> AnimeParseResult[AnimeItem]:
 def normalize_weekly_schedule(
     source: str,
     season: str,
-    records: list[SourceAnimeRecord],
-) -> AnimeParseResult[WeeklySchedule]:
+    records: List[SourceAnimeRecord],
+) -> AnimeParseResult:
     """Normalize a list of source records to a weekly schedule."""
     diagnostics = []
     operation = "normalize_weekly_schedule"
@@ -197,8 +197,8 @@ def normalize_weekly_schedule(
     normalized_season = season_result.value
 
     # Normalize each record
-    items_by_weekday: dict[int, list[AnimeItem]] = {1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: []}
-    undated_items: list[AnimeItem] = []
+    items_by_weekday: Dict[int, List[AnimeItem]] = {1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: []}
+    undated_items: List[AnimeItem] = []
     all_success = True
 
     for record in records:

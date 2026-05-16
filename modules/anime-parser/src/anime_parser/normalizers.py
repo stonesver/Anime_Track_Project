@@ -2,7 +2,7 @@
 
 import re
 import unicodedata
-from typing import Callable
+from typing import Any, Dict, List, Optional, Pattern, Tuple, Union
 
 from anime_parser.errors import (
     create_diagnostic,
@@ -18,7 +18,7 @@ from anime_parser.models import Diagnostic, NormalizedValue, PlatformLink
 VALID_SEASON_MONTHS = {"01", "04", "07", "10"}
 
 # Weekday patterns
-WEEKDAY_PATTERNS: list[tuple[re.Pattern, int | None]] = [
+WEEKDAY_PATTERNS: List[Tuple[Pattern, Optional[int]]] = [
     # Chinese weekday (周一 - 周日)
     (re.compile(r"^周([一二三四五六日])"), None),
     # Chinese weekday (星期一 - 星期日)
@@ -38,7 +38,7 @@ WEEKDAY_MAP = {
 NO_FIXED_WEEKDAY_VALUES = {"网络放送", "其他", "未定", "待定", ""}
 
 
-def normalize_season(value: str | None) -> NormalizedValue[str]:
+def normalize_season(value: Optional[str]) -> NormalizedValue[str]:
     """Normalize season string to YYYY-MM format."""
     if value is None:
         return NormalizedValue(None, invalid_season_diag(None, "Season is required but missing"))
@@ -77,7 +77,7 @@ def normalize_season(value: str | None) -> NormalizedValue[str]:
     return NormalizedValue(None, invalid_season_diag(value, "Cannot parse season format"))
 
 
-def normalize_weekday(value: str | int | None) -> NormalizedValue[int | None]:
+def normalize_weekday(value: Optional[Union[str, int]]) -> NormalizedValue[Optional[int]]:
     """Normalize weekday to integer 1-7 (1=Monday, 7=Sunday)."""
     if value is None:
         return NormalizedValue(None)
@@ -109,9 +109,9 @@ def normalize_weekday(value: str | int | None) -> NormalizedValue[int | None]:
         m = pattern.match(value)
         if m:
             if m.lastindex and m.lastindex >= 1:
-                key = m.group(1)
+                key = m.group(1).lower()  # Normalize to lowercase for lookup
             else:
-                key = value
+                key = value.lower()
             weekday = WEEKDAY_MAP.get(key)
             if weekday is not None:
                 return NormalizedValue(weekday)
@@ -119,7 +119,7 @@ def normalize_weekday(value: str | int | None) -> NormalizedValue[int | None]:
     return NormalizedValue(None, invalid_weekday_diag(value, f"Cannot normalize weekday: {value}"))
 
 
-def normalize_air_time(value: str | None) -> NormalizedValue[str | None]:
+def normalize_air_time(value: Optional[str]) -> NormalizedValue[Optional[str]]:
     """Normalize air time to HH:mm format."""
     if value is None:
         return NormalizedValue(None)
@@ -145,7 +145,7 @@ def normalize_air_time(value: str | None) -> NormalizedValue[str | None]:
     return NormalizedValue(None, invalid_time_diag(value, f"Cannot parse air time: {value}"))
 
 
-def normalize_start_date(value: str | None, season: str | None) -> NormalizedValue[str | None]:
+def normalize_start_date(value: Optional[str], season: Optional[str]) -> NormalizedValue[Optional[str]]:
     """Normalize start date to YYYY-MM-DD format."""
     if value is None:
         return NormalizedValue(None)
@@ -189,7 +189,7 @@ def normalize_start_date(value: str | None, season: str | None) -> NormalizedVal
     return NormalizedValue(None, invalid_date_diag(value, f"Cannot parse date format: {value}"))
 
 
-def clean_display_text(value: str | None) -> str | None:
+def clean_display_text(value: Optional[str]) -> Optional[str]:
     """Clean text for display by removing HTML and normalizing whitespace."""
     if value is None:
         return None
@@ -206,7 +206,7 @@ def clean_display_text(value: str | None) -> str | None:
     return value if value else None
 
 
-def normalize_title_for_match(value: str | None) -> str:
+def normalize_title_for_match(value: Optional[str]) -> str:
     """Normalize title for matching using NFKC and lowercasing."""
     if value is None:
         return ""
@@ -230,7 +230,7 @@ def normalize_title_for_match(value: str | None) -> str:
     return value
 
 
-def normalize_url(value: str | None, base_url: str | None = None) -> NormalizedValue[str | None]:
+def normalize_url(value: Optional[str], base_url: Optional[str] = None) -> NormalizedValue[Optional[str]]:
     """Normalize URL, handling relative URLs and validating protocol."""
     if value is None:
         return NormalizedValue(None)
@@ -263,7 +263,7 @@ def normalize_url(value: str | None, base_url: str | None = None) -> NormalizedV
     return NormalizedValue(None, invalid_url_diag(value, "Invalid URL format"))
 
 
-def normalize_platform_link(raw: dict) -> PlatformLink:
+def normalize_platform_link(raw: Dict[str, Any]) -> PlatformLink:
     """Normalize a source platform link to standard PlatformLink."""
     return PlatformLink(
         url=raw.get("url"),

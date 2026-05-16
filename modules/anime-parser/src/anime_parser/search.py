@@ -1,15 +1,17 @@
 """Search functionality for anime items."""
 
+from typing import List, Tuple
+
 from anime_parser.errors import invalid_params_diag, not_found_diag
 from anime_parser.models import AnimeItem, AnimeParseResult
 from anime_parser.normalizers import normalize_title_for_match
 
 
 def search_anime_items(
-    items: list[AnimeItem],
+    items: List[AnimeItem],
     query: str,
     limit: int = 5,
-) -> AnimeParseResult[list[AnimeItem]]:
+) -> AnimeParseResult:
     """Search anime items by query with confidence scoring."""
     operation = "search_anime_items"
     diagnostics = []
@@ -27,7 +29,7 @@ def search_anime_items(
     query_normalized = normalize_title_for_match(query)
 
     # Build candidate list with confidence scores
-    candidates: list[tuple[float, int, AnimeItem]] = []
+    candidates: List[Tuple[float, int, AnimeItem]] = []
 
     for item in items:
         confidence = _calculate_confidence(item, query, query_normalized)

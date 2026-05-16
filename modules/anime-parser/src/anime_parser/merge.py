@@ -1,13 +1,15 @@
 """Merge functionality for combining anime records."""
 
+from typing import Dict, List, Optional, Tuple, Union
+
 from anime_parser.errors import merge_conflict_diag
 from anime_parser.models import AnimeItem, AnimeParseResult, SourceAnimeRecord
 from anime_parser.normalizers import normalize_title_for_match
 
 
 def merge_anime_records(
-    records: list[SourceAnimeRecord],
-) -> AnimeParseResult[AnimeItem | list[AnimeItem]]:
+    records: List[SourceAnimeRecord],
+) -> AnimeParseResult:
     """Merge multiple source records into one or more AnimeItems."""
     operation = "merge_anime_records"
     diagnostics = []
@@ -22,8 +24,8 @@ def merge_anime_records(
         )
 
     # Group records by source_id first (strongest merge signal)
-    by_source_id: dict[str, list[SourceAnimeRecord]] = {}
-    no_source_id: list[SourceAnimeRecord] = []
+    by_source_id: Dict[str, List[SourceAnimeRecord]] = {}
+    no_source_id: List[SourceAnimeRecord] = []
 
     for record in records:
         if record.source_id:
@@ -35,7 +37,7 @@ def merge_anime_records(
             no_source_id.append(record)
 
     # Merge records with same source_id
-    merged_items: list[AnimeItem] = []
+    merged_items: List[AnimeItem] = []
 
     for key, recs in by_source_id.items():
         # All records with same source_id should merge
@@ -44,7 +46,7 @@ def merge_anime_records(
         diagnostics.extend(merge_diags)
 
     # For records without source_id, check normalized title match
-    title_groups: dict[str, list[SourceAnimeRecord]] = {}
+    title_groups: Dict[str, List[SourceAnimeRecord]] = {}
 
     for record in no_source_id:
         title = _get_primary_title(record)
@@ -104,7 +106,7 @@ def merge_anime_records(
     )
 
 
-def _merge_records_list(records: list[SourceAnimeRecord]) -> tuple[AnimeItem, list]:
+def _merge_records_list(records: List[SourceAnimeRecord]) -> Tuple[AnimeItem, List]:
     """Merge a list of source records into a single AnimeItem."""
     from anime_parser.service import normalize_anime
 
@@ -136,7 +138,7 @@ def _merge_records_list(records: list[SourceAnimeRecord]) -> tuple[AnimeItem, li
     return merged, diagnostics
 
 
-def _merge_anime_items(item1: AnimeItem, item2: AnimeItem) -> tuple[AnimeItem, list]:
+def _merge_anime_items(item1: AnimeItem, item2: AnimeItem) -> Tuple[AnimeItem, List]:
     """Merge two AnimeItems, preferring non-empty and longer values."""
     diagnostics = []
     result = item1.model_copy(deep=True)
@@ -169,7 +171,7 @@ def _merge_anime_items(item1: AnimeItem, item2: AnimeItem) -> tuple[AnimeItem, l
     return result, diagnostics
 
 
-def _prefer_longer(a: str | None, b: str | None) -> str | None:
+def _prefer_longer(a: Optional[str], b: Optional[str]) -> Optional[str]:
     """Prefer non-empty and longer value."""
     if not a:
         return b
@@ -209,7 +211,7 @@ def _titles_are_similar(norm1: str, norm2: str) -> bool:
     return False
 
 
-def _check_ambiguous(items: list[AnimeItem]) -> bool:
+def _check_ambiguous(items: List[AnimeItem]) -> bool:
     """Check if there are ambiguous matches among items."""
     if len(items) <= 1:
         return False

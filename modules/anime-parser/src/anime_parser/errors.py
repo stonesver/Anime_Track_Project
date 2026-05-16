@@ -1,6 +1,6 @@
 """Error types and diagnostic utilities."""
 
-from typing import Any
+from typing import Any, Optional, Union
 
 from anime_parser.models import Diagnostic
 
@@ -25,7 +25,7 @@ class ErrorType:
 def create_diagnostic(
     code: str,
     message: str,
-    field: str | None = None,
+    field: Optional[str] = None,
     raw_value: Any = None,
     severity: str = "info",
 ) -> Diagnostic:
@@ -63,7 +63,7 @@ def missing_title_diag(raw_value: Any = None) -> Diagnostic:
 
 
 def invalid_season_diag(
-    raw_value: str | None,
+    raw_value: Optional[str],
     message: str = "Cannot normalize season",
 ) -> Diagnostic:
     """Create diagnostic for invalid season."""
@@ -77,7 +77,7 @@ def invalid_season_diag(
 
 
 def invalid_weekday_diag(
-    raw_value: str | int | None,
+    raw_value: Optional[Union[str, int]],
     message: str = "Cannot normalize weekday",
 ) -> Diagnostic:
     """Create diagnostic for invalid weekday."""
@@ -91,7 +91,7 @@ def invalid_weekday_diag(
 
 
 def invalid_date_diag(
-    raw_value: str | None,
+    raw_value: Optional[str],
     message: str = "Cannot normalize start date",
 ) -> Diagnostic:
     """Create diagnostic for invalid date."""
@@ -105,7 +105,7 @@ def invalid_date_diag(
 
 
 def invalid_time_diag(
-    raw_value: str | None,
+    raw_value: Optional[str],
     message: str = "Cannot normalize air time",
 ) -> Diagnostic:
     """Create diagnostic for invalid time."""
@@ -119,7 +119,7 @@ def invalid_time_diag(
 
 
 def invalid_url_diag(
-    raw_value: str | None,
+    raw_value: Optional[str],
     message: str = "Invalid URL",
 ) -> Diagnostic:
     """Create diagnostic for invalid URL."""

@@ -1,6 +1,6 @@
 """Data models for anime parser."""
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
 from pydantic import BaseModel, Field
 
@@ -8,40 +8,40 @@ from pydantic import BaseModel, Field
 class SourcePlatformLink(BaseModel):
     """Platform link from source record."""
 
-    url: str | None = None
-    label: str | None = None
-    region: str | None = None
-    kind: str | None = None
+    url: Optional[str] = None
+    label: Optional[str] = None
+    region: Optional[str] = None
+    kind: Optional[str] = None
 
 
 class PlatformLink(BaseModel):
     """Normalized platform link."""
 
-    url: str | None = None
-    label: str | None = None
-    region: str | None = None
-    kind: str | None = None
+    url: Optional[str] = None
+    label: Optional[str] = None
+    region: Optional[str] = None
+    kind: Optional[str] = None
 
 
 class SourceAnimeRecord(BaseModel):
     """Source anime record from data source adapter."""
 
     source: str
-    source_url: str | None = None
-    source_id: str | None = None
-    season_raw: str | None = None
-    title_raw: str | None = None
-    title_cn_raw: str | None = None
-    title_jp_raw: str | None = None
-    title_en_raw: str | None = None
-    aliases_raw: list[str] = Field(default_factory=list)
-    weekday_raw: str | int | None = None
-    air_time_raw: str | None = None
-    start_date_raw: str | None = None
-    description_raw: str | None = None
-    cover_url_raw: str | None = None
-    official_url_raw: str | None = None
-    platform_links_raw: list[SourcePlatformLink] = Field(default_factory=list)
+    source_url: Optional[str] = None
+    source_id: Optional[str] = None
+    season_raw: Optional[str] = None
+    title_raw: Optional[str] = None
+    title_cn_raw: Optional[str] = None
+    title_jp_raw: Optional[str] = None
+    title_en_raw: Optional[str] = None
+    aliases_raw: List[str] = Field(default_factory=list)
+    weekday_raw: Optional[Union[str, int]] = None
+    air_time_raw: Optional[str] = None
+    start_date_raw: Optional[str] = None
+    description_raw: Optional[str] = None
+    cover_url_raw: Optional[str] = None
+    official_url_raw: Optional[str] = None
+    platform_links_raw: List[SourcePlatformLink] = Field(default_factory=list)
     source_payload: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -49,21 +49,21 @@ class AnimeItem(BaseModel):
     """Normalized anime item."""
 
     source: str
-    external_id: str | None = None
-    external_url: str | None = None
-    season: str | None = None
-    title_cn: str | None = None
-    title_jp: str | None = None
-    title_en: str | None = None
-    aliases: list[str] = Field(default_factory=list)
-    weekday: int | None = None
-    air_time: str | None = None
-    start_date: str | None = None
+    external_id: Optional[str] = None
+    external_url: Optional[str] = None
+    season: Optional[str] = None
+    title_cn: Optional[str] = None
+    title_jp: Optional[str] = None
+    title_en: Optional[str] = None
+    aliases: List[str] = Field(default_factory=list)
+    weekday: Optional[int] = None
+    air_time: Optional[str] = None
+    start_date: Optional[str] = None
     timezone: str = "Asia/Shanghai"
-    description: str | None = None
-    cover_url: str | None = None
-    official_url: str | None = None
-    platform_links: list[PlatformLink] = Field(default_factory=list)
+    description: Optional[str] = None
+    cover_url: Optional[str] = None
+    official_url: Optional[str] = None
+    platform_links: List[PlatformLink] = Field(default_factory=list)
     confidence: float = 1.0
 
 
@@ -72,7 +72,7 @@ class ScheduleDay(BaseModel):
 
     weekday: int
     label: str
-    items: list[AnimeItem] = Field(default_factory=list)
+    items: List[AnimeItem] = Field(default_factory=list)
 
 
 class WeeklySchedule(BaseModel):
@@ -80,16 +80,16 @@ class WeeklySchedule(BaseModel):
 
     source: str
     season: str
-    days: list[ScheduleDay] = Field(default_factory=list)
+    days: List[ScheduleDay] = Field(default_factory=list)
 
 
 class Diagnostic(BaseModel):
     """Diagnostic information for debugging."""
 
     code: str
-    field: str | None = None
+    field: Optional[str] = None
     message: str
-    raw_value: Any | None = None
+    raw_value: Optional[Any] = None
     severity: str = "info"
 
 
@@ -99,7 +99,7 @@ T = TypeVar("T")
 class NormalizedValue(Generic[T]):
     """Wrapper for normalized value with diagnostic."""
 
-    def __init__(self, value: T | None, diagnostic: Diagnostic | None = None):
+    def __init__(self, value: Optional[T], diagnostic: Optional[Diagnostic] = None):
         self.value = value
         self.diagnostic = diagnostic
 
@@ -112,10 +112,10 @@ class AnimeParseResult(BaseModel):
     """Result wrapper for all parser operations."""
 
     ok: bool
-    source: str | None = None
+    source: Optional[str] = None
     operation: str
-    data: Any | None = None
-    error_type: str | None = None
-    error_message: str | None = None
-    diagnostics: list[Diagnostic] = Field(default_factory=list)
-    freshness: str | None = "live"
+    data: Optional[Any] = None
+    error_type: Optional[str] = None
+    error_message: Optional[str] = None
+    diagnostics: List[Diagnostic] = Field(default_factory=list)
+    freshness: Optional[str] = "live"
