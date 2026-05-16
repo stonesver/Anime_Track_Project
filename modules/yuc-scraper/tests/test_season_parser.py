@@ -74,6 +74,44 @@ class TestParseSeasonPage:
 
         assert len(result.detail_records) > 0
 
+    def test_parse_detail_records_split_across_table_rows(self):
+        """Test parsing one detail block whose fields are split across table rows."""
+        html = """
+        <div class="post-body">
+            <div>
+                <table width="500px">
+                    <tr>
+                        <td class="title_main_r" colspan="2" rowspan="2">
+                            <p class="title_cn_r3">自称恶役千金的婚约者观察记录</p>
+                            <p class="title_jp_r1">自称悪役令嬢な婚約者の観察記録。</p>
+                        </td>
+                        <td class="type_c_r">小说改编动画</td>
+                    </tr>
+                    <tr><td class="type_tag_r">穿越/恋爱/喜剧</td></tr>
+                    <tr>
+                        <td rowspan="2" class="staff_r">动画制作：苇Production</td>
+                        <td rowspan="2" class="cast_r">小林裕介　富田美忧</td>
+                        <td class="link_a_r">
+                            <a href="https://jisho-akuyaku-anime.jp/" target="_blank">动画官网</a>
+                            <p class="broadcast_r">4/6周一晚间</p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        """
+        result, diags = parse_season_page(html, "2026-04", "https://yuc.wiki/202604/", DEFAULT_CONFIG)
+
+        assert len(result.detail_records) == 1
+        detail = result.detail_records[0]
+        assert detail.title_cn == "自称恶役千金的婚约者观察记录"
+        assert detail.types == ["小说改编动画"]
+        assert detail.tags == ["穿越/恋爱/喜剧"]
+        assert detail.staff == ["动画制作：苇Production"]
+        assert detail.cast == ["小林裕介　富田美忧"]
+        assert detail.official_url == "https://jisho-akuyaku-anime.jp/"
+        assert detail.broadcast_text == "4/6周一晚间"
+
     def test_parse_empty_html_returns_error(self):
         """Test that empty HTML returns source_unavailable."""
         result, diags = parse_season_page("", "2026-04", "https://yuc.wiki/202604/", DEFAULT_CONFIG)
