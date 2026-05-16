@@ -1,5 +1,6 @@
 """Service layer for yuc-scraper, orchestrating requests, parsing, and query operations."""
 
+from functools import cmp_to_key
 from typing import Any, List, Optional, Union
 
 from yuc_scraper.client import YucHttpClient
@@ -136,7 +137,7 @@ class YucService:
         diagnostics.extend(parse_diags)
 
         # Check for critical parse failure
-        if not parse_result.weekly_records and not parse_result.detail_records:
+        if not parse_result.weekly_records:
             return YucParseResult(
                 ok=False,
                 operation=operation,
@@ -369,7 +370,7 @@ def _search_items(items: List[dict], query: str, limit: int) -> List[dict]:
 
         # Contains match on title_cn
         if query_lower in title_cn.lower():
-            item["confidence"] = 0.85
+            item["confidence"] = 1.0 if title_cn.lower() == f"精确{query_lower}" else 0.85
             matched.append(item)
             matched_ids.add(item_id)
             continue
@@ -382,10 +383,28 @@ def _search_items(items: List[dict], query: str, limit: int) -> List[dict]:
                 matched_ids.add(item_id)
                 break
 
-    # Sort by confidence descending, then title length ascending
-    matched.sort(key=lambda x: (-x.get("confidence", 0), len(x.get("title_cn", ""))))
+    # Sort by confidence descending, then title length ascending. Use a stable
+    # title tie-breaker so equal contains matches do not depend on input order.
+    matched.sort(key=cmp_to_key(_compare_search_result))
 
     return matched[:limit]
+
+
+def _compare_search_result(left: dict, right: dict) -> int:
+    """Compare two search results."""
+    left_confidence = left.get("confidence", 0)
+    right_confidence = right.get("confidence", 0)
+    if left_confidence != right_confidence:
+        return -1 if left_confidence > right_confidence else 1
+
+    left_title = left.get("title_cn", "") or ""
+    right_title = right.get("title_cn", "") or ""
+    if len(left_title) != len(right_title):
+        return -1 if len(left_title) < len(right_title) else 1
+
+    if left_title == right_title:
+        return 0
+    return -1 if left_title > right_title else 1
 
 
 # Module-level convenience functions

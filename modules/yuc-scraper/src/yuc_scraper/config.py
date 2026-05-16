@@ -9,7 +9,7 @@ def _default_href_pattern(href: str) -> bool:
 
 
 def _default_text_pattern(text: str) -> bool:
-    return bool(re.search(r'[0-9]{4}年[014][0-9]月新番', text))
+    return bool(re.search(r'[0-9]{4}年(1|4|7|10)月新番', text))
 
 
 @dataclass

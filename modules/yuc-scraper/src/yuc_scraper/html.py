@@ -25,7 +25,7 @@ def get_attrs_multi(tag: Tag, selector: str, attr: str, priority: tuple = ("data
     """Get attribute value, trying multiple attribute names in priority order."""
     found = tag.select_one(selector)
     if not found:
-        return default
+        return None
     for attr_name in priority:
         if found.has_attr(attr_name):
             return found.get(attr_name)
@@ -65,13 +65,13 @@ def normalize_br(text: str) -> str:
 
 
 def get_text_with_br(tag: Tag) -> str:
-    """Get text content preserving <br> as spaces."""
+    """Get text content preserving <br> as line breaks."""
     result = ""
     for child in tag.children:
         if isinstance(child, str):
             result += child
         elif child.name == "br":
-            result += " "
+            result += "\n"
         elif isinstance(child, Tag):
             result += get_text_with_br(child)
     return result.strip()

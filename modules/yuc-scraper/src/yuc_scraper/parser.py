@@ -3,7 +3,7 @@
 import re
 from typing import List, Optional, Tuple
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from yuc_scraper.config import DEFAULT_CONFIG, parse_season_from_compact, YucScrapeConfig
 from yuc_scraper.errors import (
@@ -51,11 +51,12 @@ def parse_season_links(html: str, config: YucScrapeConfig = DEFAULT_CONFIG) -> T
         text = link.get_text(strip=True)
 
         # Check href pattern
-        if not re.match(r"^/[0-9]{6}/?$", href):
+        if not config.list_seasons.href_pattern(href):
             continue
 
-        # Check text pattern
-        if not re.match(r"^[0-9]{4}年(1|4|7|10)月新番", text):
+        # Check text pattern. yuc sometimes prefixes the latest season with New,
+        # so the match must not require the year to be the first token.
+        if not config.list_seasons.text_pattern(text):
             continue
 
         # Extract compact season from href
@@ -83,7 +84,7 @@ def parse_season_links(html: str, config: YucScrapeConfig = DEFAULT_CONFIG) -> T
             continue
 
         # Check for New marker
-        is_new = bool(re.search(r"(New|\\(New\\)|（New）)", text))
+        is_new = bool(re.search(r"(\(?New\)?|（New）)", text, re.IGNORECASE))
 
         # Build absolute URL
         base_url = config.base_url.rstrip("/")
@@ -100,6 +101,8 @@ def parse_season_links(html: str, config: YucScrapeConfig = DEFAULT_CONFIG) -> T
             text=text,
             is_new=is_new,
         ))
+
+    season_links.sort(key=lambda link: link.season, reverse=True)
 
     if not season_links:
         diagnostics.append(Diagnostic(
@@ -219,45 +222,53 @@ def parse_weekly_records(
     """Parse weekly schedule records from article element."""
     records = []
 
-    # Find all weekday markers
+    # yuc's generated HTML does not keep weekday markers and anime rows in one
+    # table sibling chain. Scan the article in document order and assign each
+    # title cell to the latest weekday marker seen before it.
     weekday_markers = article.select(config.weekly.weekday_selector)
+    title_cells = article.select(config.weekly.title_selector)
+    weekday_marker_ids = {id(marker) for marker in weekday_markers}
+    title_cell_ids = {id(title_cell) for title_cell in title_cells}
     current_weekday: Optional[int] = None
     current_weekday_label: Optional[str] = None
 
-    for marker in weekday_markers:
-        marker_text = marker.get_text(strip=True)
-        parsed = parse_weekday(marker_text)
-        if parsed:
-            current_weekday = parsed
-            current_weekday_label = marker_text
-        else:
+    for node in article.descendants:
+        if not isinstance(node, Tag):
             continue
 
-        # Get parent row or container
-        parent = marker.find_parent("tr")
-        if not parent:
+        if id(node) in weekday_marker_ids:
+            current_weekday_label = node.get_text(strip=True)
+            current_weekday = parse_weekday(current_weekday_label)
             continue
 
-        # Find anime items between this marker and next
-        items_container = parent.find_next_sibling("tr")
-        while items_container:
-            # Check if this is a weekday marker row
-            if items_container.select_one(config.weekly.weekday_selector):
-                break
-
-            # Check if this is an anime item row
-            title_cell = items_container.select_one(config.weekly.title_selector)
-            if title_cell:
-                record = _parse_weekly_item(
-                    items_container, season, source_url,
-                    current_weekday, current_weekday_label, config,
-                )
-                if record:
-                    records.append(record)
-
-            items_container = items_container.find_next_sibling("tr")
+        if id(node) in title_cell_ids:
+            item_container = _find_weekly_item_container(node, config)
+            record = _parse_weekly_item(
+                item_container, season, source_url,
+                current_weekday, current_weekday_label, config,
+            )
+            if record:
+                records.append(record)
 
     return records
+
+
+def _find_weekly_item_container(title_cell: Tag, config: YucScrapeConfig) -> Tag:
+    """Find the smallest ancestor that contains one weekly anime item."""
+    current: Optional[Tag] = title_cell
+    while current is not None:
+        if (
+            current.select_one(config.weekly.title_selector)
+            and (
+                current.select_one(config.weekly.time_selector)
+                or current.select_one(config.weekly.start_or_note_selector)
+                or current.select_one(config.weekly.cover_selector)
+            )
+        ):
+            return current
+        current = current.parent if isinstance(current.parent, Tag) else None
+
+    return title_cell.find_parent("tr") or title_cell
 
 
 def _parse_weekly_item(row, season, source_url, weekday, weekday_label, config):
@@ -272,10 +283,9 @@ def _parse_weekly_item(row, season, source_url, weekday, weekday_label, config):
         title_text = get_text_with_br(title_cell)
         selector_hits["title"] = 1
 
-        # Extract Chinese title (usually first line)
-        first_line = title_text.split("\n")[0] if title_text else None
-        if first_line:
-            title_cn = first_line.strip()
+        # Keep all title lines; yuc often splits one Chinese title with <br>.
+        if title_text:
+            title_cn = re.sub(r"\s+", " ", title_text).strip()
 
     # Time
     time_cell = row.select_one(config.weekly.time_selector)
@@ -323,7 +333,10 @@ def _parse_weekly_item(row, season, source_url, weekday, weekday_label, config):
 
         # Find region nearby
         region = None
-        area_el = link.find_parent(config.weekly.platform_area_selector)
+        area_el = None
+        platform_row = link.find_parent("tr")
+        if platform_row:
+            area_el = platform_row.select_one(config.weekly.platform_area_selector)
         if area_el:
             region = area_el.get_text(strip=True)
 
