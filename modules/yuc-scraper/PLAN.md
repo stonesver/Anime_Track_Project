@@ -1,12 +1,12 @@
-# V1-A：yuc 能力实现计划
+# V1-A：yuc 静态抓取模块计划
 
 ## 1. 目标
 
-本计划只描述 yuc 能力实现。它是底层确定性能力，负责从 yuc.wiki 静态 Hexo 页面抓取、解析并输出结构化番剧数据。
+本计划只描述 yuc.wiki 静态抓取模块。它是底层确定性数据源能力，负责从 yuc.wiki 静态 Hexo 页面抓取 HTML，并按 yuc 页面结构提取源站记录。
 
-yuc.wiki 当前没有可依赖的后端查询接口。V1 不按接口爬虫设计，不做浏览器自动化，不依赖页面 JavaScript 执行；只请求 Hexo 已生成的 HTML，并使用配置化 HTML 解析规则提取数据。
+yuc.wiki 当前没有可依赖的后端查询接口。V1 不按接口爬虫设计，不做浏览器自动化，不依赖页面 JavaScript 执行；只请求 Hexo 已生成的 HTML，并使用配置化 HTML 提取规则获取源站数据。
 
-本模块不创建 Agent Skill，不写 Skill 文档，不处理 Agent 触发逻辑。
+本模块不创建 Agent Skill，不写 Skill 文档，不处理 Agent 触发逻辑。统一输出模型由 `modules/anime-parser/PLAN.md` 中定义的解析模块负责，本模块只调用或适配该标准化能力。
 
 参考页面：
 
@@ -17,15 +17,16 @@ yuc.wiki 当前没有可依赖的后端查询接口。V1 不按接口爬虫设�
 
 只实现：
 
-1. 数据模型与标准化；
-2. yuc 静态 HTML 请求；
-3. 配置化 HTML 抓取规则；
-4. 当前季度识别；
-5. 指定季度周表解析；
-6. 按星期过滤；
-7. 番剧搜索；
-8. 番剧基础详情解析；
-9. 结构化错误返回。
+1. yuc 静态 HTML 请求；
+2. 配置化 HTML 抓取规则；
+3. 当前季度识别；
+4. 指定季度周表源记录提取；
+5. 指定季度详情源记录提取；
+6. 将 yuc 源记录交给解析模块标准化；
+7. 按星期过滤；
+8. 番剧搜索；
+9. 番剧基础详情查询；
+10. 结构化错误返回。
 
 不实现：
 
@@ -77,7 +78,7 @@ LLM 只可在后续阶段用于生成或修复候选抓取规则建议，不能�
 7. 平台链接位于 `tr.tr_area a`，区域文本常见于 `p.area`、`p.area_c`；
 8. 封面图通常使用 `img[data-src]`，不能只读取 `src`。
 
-周表解析目标：
+周表源记录提取目标：
 
 1. 以 `td.date2` 切分星期分组；
 2. 对每个分组解析番剧卡片；
@@ -100,7 +101,7 @@ LLM 只可在后续阶段用于生成或修复候选抓取规则建议，不能�
 6. 官网链接常见于 `td.link_a_r a`，文本可能为 `动画官网`；
 7. 播出说明常见于 `p.broadcast_r`、`p.broadcast_ex_r`。
 
-详情解析目标：
+详情源记录提取目标：
 
 1. 提取中文标题、日文标题或其他标题文本；
 2. 提取类型、标签、staff、cast、官网链接、播出说明；
@@ -108,66 +109,19 @@ LLM 只可在后续阶段用于生成或修复候选抓取规则建议，不能�
 4. 详情字段缺失时返回 `null` 或空列表，不编造内容；
 5. 无法唯一合并时保留候选，不做不可靠合并。
 
-## 4. 输出模型
+## 4. 与解析模块的关系
 
-本模块输出统一结构，供后续 Skill、API、缓存和数据库复用。
+本模块不独占统一数据模型。所有面向 Skill、API、缓存和数据库复用的标准结构，均以 `modules/anime-parser/PLAN.md` 为准。
 
-### `AnimeItem`
+yuc 抓取模块只产生源站记录，并调用解析模块得到标准输出：
 
-```json
-{
-  "source": "yuc",
-  "external_id": "string or null",
-  "external_url": "string or null",
-  "season": "2026-04",
-  "title_cn": "string or null",
-  "title_jp": "string or null",
-  "title_en": "string or null",
-  "aliases": [],
-  "weekday": 3,
-  "air_time": "22:00",
-  "start_date": "2026-04-01",
-  "timezone": "Asia/Shanghai",
-  "description": "string or null",
-  "cover_url": "string or null",
-  "official_url": "string or null",
-  "confidence": 1.0
-}
-```
+1. 首页季度链接记录；
+2. 季度页周表源记录；
+3. 季度页详情源记录；
+4. 平台链接、官网链接、封面图等来源字段；
+5. yuc 页面 URL、选择器命中情况、解析诊断信息。
 
-### `ScheduleDay`
-
-```json
-{
-  "weekday": 3,
-  "label": "周三",
-  "items": []
-}
-```
-
-### `WeeklySchedule`
-
-```json
-{
-  "source": "yuc",
-  "season": "2026-04",
-  "days": []
-}
-```
-
-### `YucResult`
-
-```json
-{
-  "ok": true,
-  "source": "yuc",
-  "operation": "get_weekly_schedule",
-  "data": {},
-  "error_type": null,
-  "error_message": null,
-  "freshness": "live"
-}
-```
+对外查询能力仍返回解析模块标准化后的 `AnimeItem`、`ScheduleDay`、`WeeklySchedule` 和结构化结果对象。
 
 ## 5. 能力接口
 
@@ -205,8 +159,9 @@ LLM 只可在后续阶段用于生成或修复候选抓取规则建议，不能�
 1. `season = current` 时先调用当前季度识别；
 2. 将 `YYYY-MM` 转换为 `YYYYMM`；
 3. 请求 `https://yuc.wiki/{YYYYMM}/`；
-4. 使用配置化规则解析周表与基础详情；
-5. 如果传入 `weekday`，只返回对应星期的数据。
+4. 使用配置化规则提取周表与基础详情源记录；
+5. 调用解析模块生成标准 `WeeklySchedule`；
+6. 如果传入 `weekday`，只返回对应星期的数据。
 
 ### `search_anime`
 
@@ -328,7 +283,7 @@ operations:
 - 不把原始 HTML 暴露给上层；
 - 不吞掉错误；
 - 始终返回结构化结果；
-- 页面请求成功但周表解析为 0 条时必须返回 `parse_zero_items`；
+- 页面请求成功但周表源记录为 0 条时必须返回 `parse_zero_items`；
 - 关键选择器完全失效时必须返回 `parse_schema_changed`；
 - 不把 yuc 页面结构变化伪装成空搜索结果。
 

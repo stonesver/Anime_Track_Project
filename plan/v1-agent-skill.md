@@ -8,7 +8,7 @@
 
 ## 2. 前置依赖
 
-必须先完成 `plan/v1-yuc-capability.md` 中定义的 yuc 能力。
+必须先完成 `modules/anime-parser/PLAN.md` 中定义的标准化输出模型，以及 `modules/yuc-scraper/PLAN.md` 中定义的 yuc 静态抓取能力。
 
 Skill / Tool 只调用这些底层能力：
 
