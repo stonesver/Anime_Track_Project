@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Anime Track 功能验证台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Anime Track 功能验证台</h1>
+          <p id="healthText">连接本地验证服务中...</p>
+        </div>
+        <button id="runAllBtn" class="primary-button">一键验证</button>
+      </header>
+
+      <section class="summary-grid" aria-label="验证概览">
+        <article class="metric">
+          <span>YUC 当前季度</span>
+          <strong id="currentSeasonValue">--</strong>
+        </article>
+        <article class="metric">
+          <span>周表条目</span>
+          <strong id="scheduleCountValue">--</strong>
+        </article>
+        <article class="metric">
+          <span>搜索结果</span>
+          <strong id="searchCountValue">--</strong>
+        </article>
+        <article class="metric">
+          <span>最后状态</span>
+          <strong id="lastStatusValue">--</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <aside class="control-panel">
+          <section class="panel-section">
+            <div class="section-title">
+              <h2>YUC 抓取验证</h2>
+              <button id="currentSeasonBtn">当前季度</button>
+            </div>
+            <label>
+              季度
+              <input id="seasonInput" value="current" placeholder="current 或 2026-04" />
+            </label>
+            <label>
+              星期过滤
+              <select id="weekdayInput">
+                <option value="">全部</option>
+                <option value="1">周一</option>
+                <option value="2">周二</option>
+                <option value="3">周三</option>
+                <option value="4">周四</option>
+                <option value="5">周五</option>
+                <option value="6">周六</option>
+                <option value="7">周日</option>
+              </select>
+            </label>
+            <button id="scheduleBtn">读取周表</button>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-title">
+              <h2>搜索与详情</h2>
+            </div>
+            <label>
+              标题关键词
+              <input id="queryInput" value="魔女" placeholder="输入动画标题" />
+            </label>
+            <label>
+              返回上限
+              <input id="limitInput" type="number" min="1" max="50" value="5" />
+            </label>
+            <div class="button-row">
+              <button id="searchBtn">搜索</button>
+              <button id="detailBtn">详情</button>
+            </div>
+          </section>
+
+          <section class="panel-section">
+            <div class="section-title">
+              <h2>归一化验证</h2>
+              <button id="loadExampleBtn">载入示例</button>
+            </div>
+            <label>
+              单条 SourceAnimeRecord
+              <textarea id="normalizeInput" spellcheck="false"></textarea>
+            </label>
+            <button id="normalizeBtn">归一化单条</button>
+            <label>
+              周表 Payload
+              <textarea id="weeklyNormalizeInput" spellcheck="false"></textarea>
+            </label>
+            <button id="weeklyNormalizeBtn">归一化周表</button>
+          </section>
+        </aside>
+
+        <section class="result-panel">
+          <div class="tabs" role="tablist" aria-label="结果视图">
+            <button class="tab-button active" data-tab="visual">可视化</button>
+            <button class="tab-button" data-tab="json">JSON</button>
+            <button class="tab-button" data-tab="diagnostics">诊断</button>
+          </div>
+
+          <div id="visualTab" class="tab-content active">
+            <div id="visualOutput" class="visual-output empty-state">暂无结果</div>
+          </div>
+          <div id="jsonTab" class="tab-content">
+            <pre id="jsonOutput">{}</pre>
+          </div>
+          <div id="diagnosticsTab" class="tab-content">
+            <div id="diagnosticsOutput" class="diagnostics empty-state">暂无诊断信息</div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
