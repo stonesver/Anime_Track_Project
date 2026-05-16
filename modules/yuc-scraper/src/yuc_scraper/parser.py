@@ -382,8 +382,7 @@ def parse_detail_records(
     for title_el in detail_titles:
         selector_hits = {}
 
-        # Get container (parent of title)
-        container = title_el.find_parent()
+        container = _find_detail_container(title_el, config)
         if not container:
             continue
 
@@ -462,3 +461,16 @@ def parse_detail_records(
         records.append(record)
 
     return records
+
+
+def _find_detail_container(title_el: Tag, config: YucScrapeConfig) -> Optional[Tag]:
+    """Find the smallest detail block that belongs to one anime."""
+    table = title_el.find_parent("table")
+    if table and len(table.select(config.detail.detail_title_selector)) == 1:
+        return table
+
+    row = title_el.find_parent("tr")
+    if row:
+        return row
+
+    return title_el.find_parent()
