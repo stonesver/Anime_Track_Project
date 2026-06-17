@@ -11,6 +11,28 @@
 
 ## 启动
 
+方式一：双击仓库根目录下的：
+
+```text
+start_visual_validation.command
+```
+
+方式二：在仓库根目录执行：
+
+```bash
+tools/visual_validation/service.sh start-open
+```
+
+常用管理命令：
+
+```bash
+tools/visual_validation/service.sh status
+tools/visual_validation/service.sh restart
+tools/visual_validation/service.sh stop
+```
+
+方式三：直接启动 Python 服务：
+
 在仓库根目录执行：
 
 ```bash
